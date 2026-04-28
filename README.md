@@ -20,3 +20,6 @@ A backend/data project that processes invoice data from CSV files, detects risk 
 ## Run locally
 ```bash
 uvicorn app.main:app --reload
+
+## API Docs
+![API Docs](docs/screenshot.png)
