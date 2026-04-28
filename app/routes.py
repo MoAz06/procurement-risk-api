@@ -10,8 +10,13 @@ router = APIRouter()
 
 
 @router.get("/invoices")
-def get_invoices():
-    return load_invoices("data/invoices.csv")
+def get_invoices(min_amount: float = None):
+    invoices = load_invoices("data/invoices.csv")
+
+    if min_amount:
+        invoices = [i for i in invoices if i["amount"] >= min_amount]
+
+    return invoices
 
 
 @router.get("/risk-signals")
@@ -45,4 +50,19 @@ def get_summary():
         "total_invoices": total_invoices,
         "total_risk_signals": total_risks,
         "high_risk_signals": high_risks
+    }
+
+@router.post("/pipeline/run")
+def run_pipeline():
+    invoices = load_invoices("data/invoices.csv")
+
+    risks = []
+    risks.extend(detect_amount_below_threshold(invoices))
+    risks.extend(detect_duplicate_invoices(invoices))
+    risks.extend(detect_weekend_invoices(invoices))
+
+    return {
+        "status": "pipeline executed",
+        "invoices_processed": len(invoices),
+        "risks_found": len(risks)
     }
