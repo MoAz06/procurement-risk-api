@@ -44,7 +44,7 @@ def get_summary():
 
     total_invoices = len(invoices)
     total_risks = len(risks)
-    high_risks = len([r for r in risks if r["severity"] == "high"])
+    high_risks = sum(1 for r in risks if r["severity"] == "high")
 
     return {
         "total_invoices": total_invoices,
