@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from pipeline.ingest import load_invoices
+from pipeline.rules import detect_amount_below_threshold
 
 router = APIRouter()
 
@@ -28,3 +29,10 @@ def get_summary():
         "total_risk_signals": 1,
         "high_risk_signals": 0
     }
+
+
+@router.get("/risk-signals")
+def get_risk_signals():
+    invoices = load_invoices("data/invoices.csv")
+    risks = detect_amount_below_threshold(invoices)
+    return risks
