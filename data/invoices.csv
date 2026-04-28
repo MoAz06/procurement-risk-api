@@ -1,0 +1,3 @@
+invoice_id,supplier,amount,status
+1,ABC Cleaning,4950,pending
+2,Office Supplies BV,1200,approved
