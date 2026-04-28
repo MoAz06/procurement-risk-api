@@ -11,7 +11,8 @@ def load_invoices(path):
                 "invoice_id": int(row["invoice_id"]),
                 "supplier": row["supplier"],
                 "amount": float(row["amount"]),
-                "status": row["status"]
+                "status": row["status"],
+                "invoice_date": row["invoice_date"]
             })
 
     return invoices
