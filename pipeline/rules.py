@@ -4,12 +4,30 @@ def detect_amount_below_threshold(invoices, threshold=5000):
     for invoice in invoices:
         amount = invoice["amount"]
 
-        # check: net onder threshold (bijv 4950 bij 5000)
         if threshold - 100 <= amount < threshold:
             risks.append({
                 "invoice_id": invoice["invoice_id"],
                 "type": "amount_below_threshold",
                 "severity": "medium"
             })
+
+    return risks
+
+
+def detect_duplicate_invoices(invoices):
+    risks = []
+    seen = {}
+
+    for invoice in invoices:
+        key = (invoice["supplier"], invoice["amount"])
+
+        if key in seen:
+            risks.append({
+                "invoice_id": invoice["invoice_id"],
+                "type": "duplicate_invoice",
+                "severity": "high"
+            })
+        else:
+            seen[key] = invoice["invoice_id"]
 
     return risks
