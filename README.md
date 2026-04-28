@@ -3,10 +3,13 @@
 A backend/data project that processes invoice data from CSV files, detects risk signals, and exposes results via a FastAPI API.
 
 ## Features
-- CSV data ingestion
-- Risk detection (duplicate invoices, threshold, weekend)
-- REST API with FastAPI
-- Filtering endpoints
+- CSV ingestion
+- Risk detection:
+  - Duplicate invoices
+  - Amount below threshold
+  - Weekend invoices
+- Filtering (e.g. severity)
+- Pipeline trigger endpoint
 
 ## Endpoints
 - GET /invoices
@@ -16,4 +19,4 @@ A backend/data project that processes invoice data from CSV files, detects risk 
 
 ## Run locally
 ```bash
-uvicorn app.main:app --reload  # procurement-risk-api
+uvicorn app.main:app --reload
