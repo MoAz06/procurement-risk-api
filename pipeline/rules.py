@@ -1,3 +1,5 @@
+from datetime import datetime
+
 def detect_amount_below_threshold(invoices, threshold=5000):
     risks = []
 
@@ -29,5 +31,22 @@ def detect_duplicate_invoices(invoices):
             })
         else:
             seen[key] = invoice["invoice_id"]
+
+    return risks
+
+
+
+def detect_weekend_invoices(invoices):
+    risks = []
+
+    for invoice in invoices:
+        invoice_date = datetime.strptime(invoice["invoice_date"], "%Y-%m-%d")
+
+        if invoice_date.weekday() >= 5:
+            risks.append({
+                "invoice_id": invoice["invoice_id"],
+                "type": "weekend_invoice",
+                "severity": "low"
+            })
 
     return risks
