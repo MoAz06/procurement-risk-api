@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pipeline.ingest import load_invoices
-from pipeline.rules import detect_amount_below_threshold, detect_duplicate_invoices
+from pipeline.rules import (
+    detect_amount_below_threshold,
+    detect_duplicate_invoices,
+    detect_weekend_invoices
+)
 
 router = APIRouter()
 
@@ -11,15 +15,18 @@ def get_invoices():
 
 
 @router.get("/risk-signals")
-def get_risk_signals():
+def get_risk_signals(severity: str = None):
     invoices = load_invoices("data/invoices.csv")
 
     risks = []
     risks.extend(detect_amount_below_threshold(invoices))
     risks.extend(detect_duplicate_invoices(invoices))
+    risks.extend(detect_weekend_invoices(invoices))
+
+    if severity:
+        risks = [r for r in risks if r["severity"] == severity]
 
     return risks
-
 
 @router.get("/analytics/summary")
 def get_summary():
@@ -28,6 +35,7 @@ def get_summary():
     risks = []
     risks.extend(detect_amount_below_threshold(invoices))
     risks.extend(detect_duplicate_invoices(invoices))
+    risks.extend(detect_weekend_invoices(invoices))
 
     total_invoices = len(invoices)
     total_risks = len(risks)
