@@ -1,4 +1,4 @@
 invoice_id,supplier,amount,status,invoice_date
 1,ABC Cleaning,4950,pending,2026-04-25
 2,Office Supplies BV,1200,approved,2026-04-22
-3,ABC Cleaning,4950,pending,2026-04-25
+3,EFG Cleaning,4950,pending,2026-04-25

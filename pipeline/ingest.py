@@ -5,7 +5,14 @@ import csv
 def save_invoices_to_db(invoices):
     db = SessionLocal()
 
+    existing_ids = {
+        i.invoice_id for i in db.query(Invoice.invoice_id).all()
+    }
+
     for inv in invoices:
+        if inv["invoice_id"] in existing_ids:
+            continue  # skip duplicates
+
         db_invoice = Invoice(
             invoice_id=inv["invoice_id"],
             supplier=inv["supplier"],
@@ -19,6 +26,7 @@ def save_invoices_to_db(invoices):
     db.commit()
     db.close()
 
+    
 def load_invoices(path):
     invoices = []
 
