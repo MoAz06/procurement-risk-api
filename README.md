@@ -1,36 +1,61 @@
 # Procurement Risk API
 
-A backend/data engineering project that ingests invoice data from CSV, stores it in PostgreSQL, detects procurement risk signals, and exposes the results through a FastAPI API.
+A production-style backend/data engineering project that ingests invoice data from CSV, stores it in PostgreSQL, detects procurement risk signals, and exposes secured endpoints via a FastAPI API.
 
 ## Tech Stack
 
-- Python
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- Uvicorn
+- Python  
+- FastAPI  
+- SQLAlchemy  
+- PostgreSQL  
+- Uvicorn  
+- JWT (authentication)  
+- Passlib (bcrypt)
 
 ## Features
 
-- CSV ingestion pipeline
-- PostgreSQL-backed API
-- Risk detection:
-  - Duplicate invoices
-  - Amount below threshold
-  - Weekend invoices
-- Filtering by amount and severity
-- Analytics summary endpoint
+- CSV ingestion pipeline  
+- PostgreSQL-backed API  
+- JWT authentication (login/register)  
+- Protected routes (Bearer token)  
+- Password hashing (bcrypt)  
+
+### Risk Detection
+- Duplicate invoices  
+- Amount below threshold  
+- Weekend invoices  
+
+### API Capabilities
+- Filtering by amount and severity  
+- Analytics summary endpoint  
 
 ## Endpoints
 
+### Public
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/` | Root endpoint |
 | GET | `/health` | Health check |
+| POST | `/auth/register` | Register user |
+| POST | `/auth/login` | Login (returns JWT) |
+
+### Protected (Bearer Token Required)
+| Method | Endpoint | Description |
+|---|---|---|
 | GET | `/invoices` | Get invoices |
 | GET | `/risk-signals` | Get risk signals |
 | GET | `/analytics/summary` | Get summary metrics |
-| POST | `/pipeline/run` | Load CSV data into PostgreSQL |
+| POST | `/pipeline/run` | Load CSV data |
+
+## Authentication
+
+Login returns a JWT token:
+
+POST /auth/login
+
+Use the token in requests:
+
+Authorization: Bearer <your_token>
 
 ## Setup
 
@@ -52,11 +77,10 @@ CREATE DATABASE procurement_db;
 
 Create a `.env` file in the project root:
 
-```text
-DATABASE_URL=postgresql://postgres:your_password@localhost:5432/procurement_db
-```
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/procurement_db  
+SECRET_KEY=your_random_secret_key
 
-Load the environment variables and initialize the database:
+Load environment variables and initialize the database:
 
 ```bash
 export $(cat .env | xargs)
@@ -73,29 +97,21 @@ uvicorn app.main:app --reload
 
 Open the API docs:
 
-```text
 http://127.0.0.1:8000/docs
-```
 
 Run the pipeline first:
 
-```text
 POST /pipeline/run
-```
 
 Then test:
 
-```text
-GET /invoices
-GET /risk-signals
-GET /analytics/summary
-```
+GET /invoices  
+GET /risk-signals  
+GET /analytics/summary  
 
 ## Pipeline Flow
 
-```text
 CSV → PostgreSQL → FastAPI → Risk signals / analytics
-```
 
 ## API Screenshot
 
@@ -103,6 +119,6 @@ CSV → PostgreSQL → FastAPI → Risk signals / analytics
 
 ## Notes
 
-The API reads invoice data from PostgreSQL. The CSV file is only used as the ingestion source through `/pipeline/run`.
-
-Local secrets are stored in `.env` and should not be committed.
+- The API reads invoice data from PostgreSQL  
+- The CSV file is only used as ingestion input via `/pipeline/run`  
+- Secrets are stored in `.env` and must not be committed  
