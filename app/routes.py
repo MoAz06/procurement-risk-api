@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Query
-from pipeline.ingest import load_invoices
+from fastapi import APIRouter
+from app.database import SessionLocal
+from app.models import Invoice
+from pipeline.ingest import load_invoices, save_invoices_to_db
 from pipeline.rules import (
     detect_amount_below_threshold,
     detect_duplicate_invoices,
@@ -9,57 +11,84 @@ from pipeline.rules import (
 router = APIRouter()
 
 
-@router.get("/invoices")
-def get_invoices(min_amount: float = None):
-    invoices = load_invoices("data/invoices.csv")
+def invoices_to_dict(invoices_db):
+    return [
+        {
+            "invoice_id": i.invoice_id,
+            "supplier": i.supplier,
+            "amount": i.amount,
+            "status": i.status,
+            "invoice_date": i.invoice_date
+        }
+        for i in invoices_db
+    ]
 
-    if min_amount:
-        invoices = [i for i in invoices if i["amount"] >= min_amount]
 
-    return invoices
-
-
-@router.get("/risk-signals")
-def get_risk_signals(severity: str = None):
-    invoices = load_invoices("data/invoices.csv")
-
+def get_risks(invoices):
     risks = []
     risks.extend(detect_amount_below_threshold(invoices))
     risks.extend(detect_duplicate_invoices(invoices))
     risks.extend(detect_weekend_invoices(invoices))
+    return risks
+
+
+@router.get("/invoices")
+def get_invoices(min_amount: float = None):
+    db = SessionLocal()
+
+    query = db.query(Invoice)
+
+    if min_amount is not None:
+        query = query.filter(Invoice.amount >= min_amount)
+
+    invoices_db = query.all()
+    result = invoices_to_dict(invoices_db)
+
+    db.close()
+    return result
+
+
+@router.get("/risk-signals")
+def get_risk_signals(severity: str = None):
+    db = SessionLocal()
+
+    invoices_db = db.query(Invoice).all()
+    invoices = invoices_to_dict(invoices_db)
+
+    db.close()
+
+    risks = get_risks(invoices)
 
     if severity:
         risks = [r for r in risks if r["severity"] == severity]
 
     return risks
 
+
 @router.get("/analytics/summary")
 def get_summary():
-    invoices = load_invoices("data/invoices.csv")
+    db = SessionLocal()
 
-    risks = []
-    risks.extend(detect_amount_below_threshold(invoices))
-    risks.extend(detect_duplicate_invoices(invoices))
-    risks.extend(detect_weekend_invoices(invoices))
+    invoices_db = db.query(Invoice).all()
+    invoices = invoices_to_dict(invoices_db)
 
-    total_invoices = len(invoices)
-    total_risks = len(risks)
-    high_risks = sum(1 for r in risks if r["severity"] == "high")
+    db.close()
+
+    risks = get_risks(invoices)
 
     return {
-        "total_invoices": total_invoices,
-        "total_risk_signals": total_risks,
-        "high_risk_signals": high_risks
+        "total_invoices": len(invoices),
+        "total_risk_signals": len(risks),
+        "high_risk_signals": sum(1 for r in risks if r["severity"] == "high")
     }
+
 
 @router.post("/pipeline/run")
 def run_pipeline():
     invoices = load_invoices("data/invoices.csv")
+    save_invoices_to_db(invoices)
 
-    risks = []
-    risks.extend(detect_amount_below_threshold(invoices))
-    risks.extend(detect_duplicate_invoices(invoices))
-    risks.extend(detect_weekend_invoices(invoices))
+    risks = get_risks(invoices)
 
     return {
         "status": "pipeline executed",
