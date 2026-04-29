@@ -5,9 +5,10 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from app.database import SessionLocal
 from app.models import User
+import os
 
-SECRET_KEY = "change_this_secret_key"
-ALGORITHM = "HS256"
+SECRET_KEY =  os.getenv("SECRET_KEY")
+ALGORITHM = "HS256" # JWT signing algorithm: HS256 (HMAC with SHA-256, uses shared secret)
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
