@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.database import SessionLocal
-from app.models import Invoice
+from app.models import Invoice, User
+from app.auth import get_current_user
 from pipeline.ingest import load_invoices, save_invoices_to_db
 from pipeline.rules import (
     detect_amount_below_threshold,
@@ -33,7 +34,10 @@ def get_risks(invoices):
 
 
 @router.get("/invoices")
-def get_invoices(min_amount: float = None):
+def get_invoices(
+    min_amount: float = None,
+    current_user: User = Depends(get_current_user)
+):
     db = SessionLocal()
 
     query = db.query(Invoice)
@@ -49,7 +53,10 @@ def get_invoices(min_amount: float = None):
 
 
 @router.get("/risk-signals")
-def get_risk_signals(severity: str = None):
+def get_risk_signals(
+    severity: str = None,
+    current_user: User = Depends(get_current_user)
+):
     db = SessionLocal()
 
     invoices_db = db.query(Invoice).all()
@@ -66,7 +73,9 @@ def get_risk_signals(severity: str = None):
 
 
 @router.get("/analytics/summary")
-def get_summary():
+def get_summary(
+    current_user: User = Depends(get_current_user)
+):
     db = SessionLocal()
 
     invoices_db = db.query(Invoice).all()
@@ -84,7 +93,9 @@ def get_summary():
 
 
 @router.post("/pipeline/run")
-def run_pipeline():
+def run_pipeline(
+    current_user: User = Depends(get_current_user)
+):
     invoices = load_invoices("data/invoices.csv")
     save_invoices_to_db(invoices)
 
